@@ -17,23 +17,26 @@ window.fetch = async (input, init) => {
 
   try {
     const archive = await archiveResponse.clone().json()
-    const sitesResponse = await nativeFetch('/data/chatgpt-sites.json')
-    if (!sitesResponse.ok) return archiveResponse
+    const [sitesResponse, galleryResponse] = await Promise.all([
+      nativeFetch('/data/chatgpt-sites.json'),
+      nativeFetch('/data/gallery.json'),
+    ])
 
-    const sites = await sitesResponse.json()
+    const sites = sitesResponse.ok ? await sitesResponse.json() : { items: [] }
+    const gallery = galleryResponse.ok ? await galleryResponse.json() : { items: [] }
+    const galleryIds = new Set((gallery.items || []).map((item) => item.id))
+
     const baseItems = (archive.items || []).filter((item) => {
-      const isChatgptSiteProject =
-        item.type === 'project' &&
-        (item.sources || []).includes('chatgpt')
-
-      return !isChatgptSiteProject
+      const isChatgptSiteProject = item.type === 'project' && (item.sources || []).includes('chatgpt')
+      const replacedByGallery = galleryIds.has(item.id)
+      return !isChatgptSiteProject && !replacedByGallery
     })
 
     return new Response(
       JSON.stringify({
         ...archive,
-        updated: sites.updated || archive.updated,
-        items: [...baseItems, ...(sites.items || [])],
+        updated: gallery.updated || sites.updated || archive.updated,
+        items: [...baseItems, ...(sites.items || []), ...(gallery.items || [])],
       }),
       {
         status: archiveResponse.status,
