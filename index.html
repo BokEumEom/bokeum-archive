@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="BokEum이 만든 프로젝트, 프롬프트, 아이디어와 실험을 한곳에 모은 개인 빌드 아카이브" />
+  <meta name="theme-color" content="#0b0d10" />
+  <title>BokEum Archive — Things I've built, explored, and learned.</title>
+  <link rel="preconnect" href="https://api.github.com" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="BokEum Archive 홈">
+      <span class="brand-mark">B</span>
+      <span><strong>BokEum Archive</strong><small>Personal Build Archive</small></span>
+    </a>
+    <nav class="header-actions" aria-label="주요 메뉴">
+      <a href="#archive">Archive</a><a href="#timeline">Timeline</a>
+      <button id="themeToggle" class="icon-button" type="button" aria-label="테마 변경">◐</button>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero shell">
+      <p class="eyebrow"><span class="live-dot"></span> ALWAYS BUILDING</p>
+      <h1>만든 것과<br /><span>생각한 것</span>을<br />잃어버리지 않기.</h1>
+      <p class="hero-copy">GitHub, Vercel, Cloudflare, ChatGPT Site에 흩어진 결과물과 그때 사용했던 프롬프트·아이디어·실험 기록을 한곳에서 찾습니다.</p>
+      <div class="hero-meta"><span id="lastSynced">로컬 아카이브 불러오는 중…</span><span class="divider">/</span><a href="https://github.com/BokEumEom" target="_blank" rel="noreferrer">github.com/BokEumEom ↗</a></div>
+    </section>
+
+    <section class="stats shell" aria-label="아카이브 통계">
+      <button class="stat-card" type="button" data-jump-filter="project"><span id="projectCount" class="stat-number">—</span><span class="stat-label">Projects</span></button>
+      <button class="stat-card" type="button" data-jump-filter="prompt"><span id="promptCount" class="stat-number">—</span><span class="stat-label">Prompts</span></button>
+      <button class="stat-card" type="button" data-jump-filter="idea"><span id="ideaCount" class="stat-number">—</span><span class="stat-label">Ideas</span></button>
+      <button class="stat-card" type="button" data-jump-filter="experiment"><span id="experimentCount" class="stat-number">—</span><span class="stat-label">Experiments</span></button>
+    </section>
+
+    <section id="archive" class="archive-section shell">
+      <div class="section-heading"><div><p class="eyebrow">ARCHIVE</p><h2>Everything, searchable.</h2></div><p id="resultSummary" class="result-summary">항목을 불러오는 중…</p></div>
+      <div class="search-panel">
+        <label class="search-box" for="searchInput"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="프로젝트, 프롬프트, 태그 검색…  예: cloudflare, game, tag:ai" autocomplete="off" /><kbd>/</kbd></label>
+        <div id="typeFilters" class="filter-row" aria-label="유형 필터">
+          <button class="filter-chip active" type="button" data-filter="all">All</button><button class="filter-chip" type="button" data-filter="project">Projects</button><button class="filter-chip" type="button" data-filter="prompt">Prompts</button><button class="filter-chip" type="button" data-filter="idea">Ideas</button><button class="filter-chip" type="button" data-filter="experiment">Experiments</button>
+        </div>
+        <div id="sourceFilters" class="filter-row source-row" aria-label="출처 필터">
+          <button class="source-chip active" type="button" data-source="all">All sources</button><button class="source-chip" type="button" data-source="github">GitHub</button><button class="source-chip" type="button" data-source="vercel">Vercel</button><button class="source-chip" type="button" data-source="cloudflare">Cloudflare</button><button class="source-chip" type="button" data-source="chatgpt">ChatGPT Site</button><button class="source-chip" type="button" data-source="manual">Notes</button>
+        </div>
+      </div>
+
+      <div id="featuredWrap" class="featured-wrap"><div class="subheading-row"><h3>Featured</h3><span>대표 작업</span></div><div id="featuredGrid" class="featured-grid"></div></div>
+      <div class="subheading-row all-items-heading"><h3>All items</h3><select id="sortSelect" class="sort-select" aria-label="정렬"><option value="recent">최근 업데이트</option><option value="oldest">오래된 순</option><option value="name">이름 순</option></select></div>
+      <div id="archiveGrid" class="archive-grid" aria-live="polite"></div>
+      <button id="loadMore" class="load-more" type="button" hidden>더 보기</button>
+      <div id="emptyState" class="empty-state" hidden><strong>찾는 항목이 없습니다.</strong><span>검색어나 필터를 바꿔보세요.</span></div>
+    </section>
+
+    <section id="timeline" class="timeline-section shell"><div class="section-heading"><div><p class="eyebrow">TIMELINE</p><h2>Build log.</h2></div><p>최근 만든 것부터 시간순으로.</p></div><div id="timelineList" class="timeline-list"></div></section>
+
+    <section class="howto shell"><div><p class="eyebrow">HOW TO ARCHIVE</p><h2>새로 만든 건<br />한 줄만 추가.</h2></div><div class="howto-card"><ol><li><strong>GitHub</strong><span>공개 저장소는 자동으로 수집됩니다.</span></li><li><strong>Vercel / Cloudflare / ChatGPT Site</strong><span><code>data/archive.json</code>에 URL을 추가합니다.</span></li><li><strong>Prompt / Idea</strong><span>같은 파일에 내용과 태그를 기록합니다.</span></li></ol></div></section>
+  </main>
+
+  <footer class="site-footer shell"><span>Built as a memory layer for things I make.</span><span>© <span id="year"></span> BokEum</span></footer>
+
+  <dialog id="itemDialog" class="item-dialog"><button id="dialogClose" class="dialog-close" type="button" aria-label="닫기">×</button><div id="dialogContent"></div></dialog>
+  <template id="cardTemplate"><article class="archive-card" tabindex="0" role="button"><div class="card-topline"><span class="type-badge"></span><span class="source-badge"></span></div><div class="card-art" aria-hidden="true"><span></span></div><div class="card-body"><div class="card-title-row"><h4></h4><span class="arrow">↗</span></div><p class="card-summary"></p><div class="tag-list"></div><div class="card-footer"><time></time><span class="status"></span></div></div></article></template>
+  <script src="./app.js" defer></script>
+</body>
+</html>
