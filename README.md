@@ -1,83 +1,125 @@
 # BokEum Archive
 
-> Things I've built, explored, and learned.
+> Things I've built, prompted & explored.
 
 GitHub, Vercel, Cloudflare, ChatGPT Site에 흩어진 프로젝트와 프롬프트·아이디어·실험을 한곳에서 찾기 위한 개인 빌드 아카이브입니다.
 
-## 주요 기능
+## Stack
 
-- `BokEumEom` GitHub 공개 저장소 자동 수집
-- Projects / Prompts / Ideas / Experiments 분류
-- GitHub / Vercel / Cloudflare / ChatGPT Site 출처 필터
-- 제목·설명·태그·아이디어·프롬프트 통합 검색
-- `type:prompt`, `source:cloudflare`, `tag:game` 검색 토큰
-- Featured Projects와 최근 Build Timeline
-- 프로젝트 상세에서 Idea → Prompt → Notes → Live → GitHub 연결
-- Dark / Light 테마
-- 외부 npm 의존성 없는 정적 웹앱
+- React 19
+- Vite 7
+- CSS only UI
+- GitHub public API sync
+- Vercel deployment
+
+## 주요 화면
+
+### Sites
+
+실제로 만든 웹사이트, 앱, 게임, 실험을 결과 화면 중심으로 탐색합니다.
+
+- GitHub 공개 저장소 자동 동기화
+- Vercel / Cloudflare / ChatGPT Site / GitHub 필터
+- 검색 및 정렬
+- Live URL이 있는 사이트는 자동 screenshot preview 시도
+- 상세 화면에서 Idea / Prompt / Notes / Live / GitHub 연결
+
+### Prompt Gallery
+
+Tripo / Mayz처럼 결과물을 먼저 보는 프롬프트 갤러리입니다.
+
+- Image / Video / Web / 3D / Game / Research 필터
+- 모델 배지
+- Masonry gallery
+- Prompt 복사
+- 생성 결과 이미지 연결
+
+Prompt preview 이미지는 `public/assets/prompts/`에 저장한 뒤 `public/data/archive.json`의 `preview`에 연결합니다.
+
+```json
+{
+  "id": "prompt-example",
+  "type": "prompt",
+  "category": "image",
+  "model": "ChatGPT Image",
+  "title": "Example Prompt",
+  "preview": "/assets/prompts/example.png",
+  "prompt": "Create..."
+}
+```
 
 ## 로컬 실행
 
 ```bash
-python3 -m http.server 4173
+npm install
+npm run dev
 ```
 
-브라우저에서 `http://localhost:4173`을 엽니다.
+Production build:
 
-## 데이터 추가
-
-`data/archive.json`의 `items` 배열에 항목을 추가합니다.
-
-```json
-{
-  "id": "my-new-project",
-  "type": "project",
-  "title": "My New Project",
-  "summary": "프로젝트 한 줄 설명",
-  "date": "2026-09-10",
-  "updated": "2026-09-10",
-  "status": "live",
-  "featured": false,
-  "sources": ["vercel", "github"],
-  "tags": ["ai", "web"],
-  "liveUrl": "https://example.vercel.app",
-  "githubRepo": "BokEumEom/example",
-  "idea": "왜 만들었는지",
-  "prompt": "사용했던 핵심 프롬프트",
-  "notes": "만들면서 알게 된 것"
-}
+```bash
+npm run build
+npm run preview
 ```
 
-### type
+## 데이터 관리
 
-`project`, `prompt`, `idea`, `experiment`
-
-### sources
-
-`github`, `vercel`, `cloudflare`, `chatgpt`, `manual`
-
-## GitHub 자동 수집
-
-브라우저에서 GitHub public API를 사용해 공개 저장소를 가져옵니다.
+수동 아카이브 데이터는 다음 파일에서 관리합니다.
 
 ```text
-https://api.github.com/users/BokEumEom/repos
+public/data/archive.json
 ```
 
-`archive.json`에 같은 `githubRepo`가 존재하면 수동 데이터가 우선되므로 중복되지 않습니다.
+지원 type:
 
-## Vercel 배포
+- `project`
+- `prompt`
+- `idea`
+- `experiment`
 
-GitHub 저장소를 Vercel에 Import한 뒤 아래처럼 설정하면 됩니다.
+지원 sources:
 
-- Framework Preset: `Other`
-- Build Command: 비움
-- Output Directory: `.`
+- `github`
+- `vercel`
+- `cloudflare`
+- `chatgpt`
+- `manual`
+
+`githubRepo`가 같은 수동 항목이 있으면 GitHub 자동 수집 데이터보다 수동 데이터가 우선합니다.
+
+## 프로젝트 구조
+
+```text
+bokeum-archive/
+├── public/
+│   └── data/
+│       └── archive.json
+├── src/
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── styles.css
+├── index.html
+├── package.json
+├── vite.config.js
+└── vercel.json
+```
+
+## Vercel
+
+Vercel에서 GitHub repository를 Import하면 Vite를 자동 감지할 수 있습니다.
+
+현재 `vercel.json`은 다음 빌드 흐름을 사용합니다.
+
+```text
+npm run build → dist
+```
+
+별도 Environment Variable은 필요하지 않습니다.
 
 ## 다음 단계
 
-1. Vercel / Cloudflare 프로젝트 자동 동기화
-2. 배포 사이트 스크린샷 자동 생성
-3. URL 입력만으로 프로젝트 메타데이터 생성
-4. Prompt ↔ Project 양방향 연결
-5. private admin mode
+1. 실제 Prompt 생성 이미지 아카이빙
+2. Vercel / Cloudflare 프로젝트 API 동기화
+3. Prompt ↔ Project 관계 연결
+4. 프로젝트별 Build Log
+5. private admin / editor mode
