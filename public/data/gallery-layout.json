@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "updated": "2026-09-10",
+  "display": {
+    "style": "image-first-masonry",
+    "desktopColumns": 5,
+    "wideColumns": 6,
+    "tabletColumns": 3,
+    "mobileColumns": 2,
+    "gap": 8,
+    "showMetadataOnHover": true,
+    "preserveAspectRatio": true
+  }
+}
