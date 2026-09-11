@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 
 const GITHUB_USER = 'BokEumEom'
-const SITE_PAGE_SIZE = 18
-const VIEWS = ['home', 'sites', 'prompts', 'ideas']
+const PAGE_SIZE = 18
+const VIEWS = ['home', 'sites', 'games', 'prompts', 'ideas']
 const SOURCE_LABEL = { github: 'GitHub', vercel: 'Vercel', cloudflare: 'Cloudflare', chatgpt: 'ChatGPT Site', manual: 'Notes' }
 const CATEGORY_LABEL = { image: 'Image', video: 'Video', web: 'Web', '3d': '3D', game: 'Game', research: 'Research' }
 
@@ -11,7 +11,7 @@ function inferTags(repo) {
   const rules = [
     ['ai', ['ai', 'llm', 'agent', 'rag', 'gemini']],
     ['devops', ['devops', 'terraform', 'kubernetes', 'aws', 'infra', 'sre']],
-    ['game', ['game', 'quiz', 'puzzle', 'rpg', 'reversi', 'arcade']],
+    ['game', ['game', 'quiz', 'puzzle', 'rpg', 'reversi', 'arcade', 'runner']],
     ['data', ['data', 'trend', 'dashboard', 'scrape']],
     ['web', ['web', 'react', 'next', 'svelte', 'gatsby']],
     ['ev', ['ev', 'charging', 'electric']],
@@ -41,6 +41,13 @@ function repoToItem(repo) {
     prompt: '',
     notes: repo.language ? `Primary language: ${repo.language}` : '',
   }
+}
+
+function isGameProject(item) {
+  if (item.type !== 'project') return false
+  const tags = (item.tags || []).map((tag) => String(tag).toLowerCase())
+  const text = `${item.title || ''} ${item.summary || ''}`.toLowerCase()
+  return tags.includes('game') || ['rift rush', 'gearsprout', 'moonberry rush'].some((name) => text.includes(name))
 }
 
 async function loadArchive() {
@@ -88,7 +95,7 @@ function Header({ view, onNavigate, theme, onTheme }) {
       </button>
       <nav className="main-nav" aria-label="주요 메뉴">
         {[
-          ['home', 'Home'], ['sites', 'Sites'], ['prompts', 'Prompt Gallery'], ['ideas', 'Ideas'],
+          ['home', 'Home'], ['sites', 'Sites'], ['games', 'Games'], ['prompts', 'Prompt Gallery'], ['ideas', 'Ideas'],
         ].map(([key, label]) => (
           <button key={key} className={`nav-link ${view === key ? 'active' : ''}`} onClick={() => onNavigate(key)}>{label}</button>
         ))}
@@ -141,9 +148,11 @@ function PromptCard({ item, onOpen }) {
   const [copied, setCopied] = useState(false)
   const copy = async (event) => {
     event.stopPropagation()
-    await navigator.clipboard.writeText(item.prompt || '')
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1200)
+    try {
+      await navigator.clipboard.writeText(item.prompt || '')
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1200)
+    } catch { setCopied(false) }
   }
   return (
     <article className="prompt-card" onClick={() => onOpen(item)}>
@@ -167,9 +176,11 @@ function DetailModal({ item, onClose }) {
   }, [onClose])
   if (!item) return null
   const copy = async () => {
-    await navigator.clipboard.writeText(item.prompt || '')
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1200)
+    try {
+      await navigator.clipboard.writeText(item.prompt || '')
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1200)
+    } catch { setCopied(false) }
   }
   return (
     <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
@@ -192,12 +203,19 @@ function DetailModal({ item, onClose }) {
   )
 }
 
-function Home({ items, githubCount, onNavigate, onOpen }) {
-  const sites = items.filter((item) => item.type === 'project')
+function SectionHeading({ eyebrow, title, description, action, onAction }) {
+  return <div className="section-heading"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2>{description && <p>{description}</p>}</div>{action && <button className="text-link" onClick={onAction}>{action}</button>}</div>
+}
+
+function Home({ items, onNavigate, onOpen }) {
+  const projects = items.filter((item) => item.type === 'project')
+  const games = projects.filter(isGameProject)
+  const sites = projects.filter((item) => !isGameProject(item))
   const prompts = items.filter((item) => item.type === 'prompt')
   const ideas = items.filter((item) => item.type === 'idea' || item.type === 'experiment')
   const selectedSites = sites.filter((item) => item.featured).slice(0, 6)
-  const selectedPrompts = prompts.filter((item) => item.featured).slice(0, 6)
+  const selectedGames = games.filter((item) => item.featured).slice(0, 3)
+  const selectedPrompts = prompts.filter((item) => item.featured).slice(0, 8)
   return (
     <>
       <section className="hero shell">
@@ -207,15 +225,19 @@ function Home({ items, githubCount, onNavigate, onOpen }) {
         <div className="hero-actions"><button className="primary-btn" onClick={() => onNavigate('sites')}>사이트 둘러보기</button><button className="ghost-btn" onClick={() => onNavigate('prompts')}>Prompt Gallery</button></div>
         <div className="stats-row">
           <button onClick={() => onNavigate('sites')}><strong>{sites.length}</strong><span>Sites & Projects</span></button>
+          <button onClick={() => onNavigate('games')}><strong>{games.length}</strong><span>Games</span></button>
           <button onClick={() => onNavigate('prompts')}><strong>{prompts.length}</strong><span>Prompts</span></button>
-          <button onClick={() => onNavigate('ideas')}><strong>{ideas.length}</strong><span>Ideas & Experiments</span></button>
-          <div><strong>{githubCount}</strong><span>GitHub synced</span></div>
+          <button onClick={() => onNavigate('ideas')}><strong>{ideas.length}</strong><span>Ideas</span></button>
         </div>
       </section>
       <section className="shell home-section">
         <SectionHeading eyebrow="SELECTED WORK" title="Sites" action="전체 보기 →" onAction={() => onNavigate('sites')} />
         <div className="site-grid featured-site-grid">{selectedSites.map((item) => <SiteCard key={item.id} item={item} featured onOpen={onOpen} />)}</div>
       </section>
+      {selectedGames.length > 0 && <section className="shell home-section game-home-section">
+        <SectionHeading eyebrow="PLAYABLE BUILDS" title="Games" description="게임과 인터랙티브 프로토타입은 일반 사이트와 분리해 보관합니다." action="게임 전체 보기 →" onAction={() => onNavigate('games')} />
+        <div className="site-grid">{selectedGames.map((item) => <SiteCard key={item.id} item={item} onOpen={onOpen} />)}</div>
+      </section>}
       <section className="home-prompt-band"><div className="shell">
         <SectionHeading eyebrow="REMIX & REUSE" title="Prompt Gallery" description="결과 이미지와 함께 다시 꺼내 쓰는 프롬프트 모음." action="갤러리 열기 →" onAction={() => onNavigate('prompts')} />
         <div className="prompt-masonry compact">{selectedPrompts.map((item) => <PromptCard key={item.id} item={item} onOpen={onOpen} />)}</div>
@@ -224,27 +246,35 @@ function Home({ items, githubCount, onNavigate, onOpen }) {
   )
 }
 
-function SectionHeading({ eyebrow, title, description, action, onAction }) {
-  return <div className="section-heading"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2>{description && <p>{description}</p>}</div>{action && <button className="text-link" onClick={onAction}>{action}</button>}</div>
-}
-
-function Sites({ items, onOpen }) {
+function ProjectCollection({ items, onOpen, games = false }) {
   const [query, setQuery] = useState('')
   const [source, setSource] = useState('all')
   const [sort, setSort] = useState('recent')
-  const [shown, setShown] = useState(SITE_PAGE_SIZE)
-  const projects = useMemo(() => items.filter((item) => item.type === 'project').filter((item) => {
-    if (source !== 'all' && !(item.sources || []).includes(source)) return false
-    const hay = `${item.title} ${item.summary} ${(item.tags || []).join(' ')} ${(item.sources || []).join(' ')}`.toLowerCase()
-    return hay.includes(query.toLowerCase())
-  }).sort((a, b) => sort === 'name' ? a.title.localeCompare(b.title) : sort === 'oldest' ? (a.updated || a.date || '').localeCompare(b.updated || b.date || '') : (b.updated || b.date || '').localeCompare(a.updated || a.date || '')), [items, query, source, sort])
-  useEffect(() => setShown(SITE_PAGE_SIZE), [query, source, sort])
+  const [shown, setShown] = useState(PAGE_SIZE)
+  const projects = useMemo(() => items
+    .filter((item) => item.type === 'project')
+    .filter((item) => games ? isGameProject(item) : !isGameProject(item))
+    .filter((item) => {
+      if (source !== 'all' && !(item.sources || []).includes(source)) return false
+      const hay = `${item.title} ${item.summary} ${(item.tags || []).join(' ')} ${(item.sources || []).join(' ')}`.toLowerCase()
+      return hay.includes(query.toLowerCase())
+    })
+    .sort((a, b) => sort === 'name' ? a.title.localeCompare(b.title) : sort === 'oldest' ? (a.updated || a.date || '').localeCompare(b.updated || b.date || '') : (b.updated || b.date || '').localeCompare(a.updated || a.date || '')),
+  [items, query, source, sort, games])
+  useEffect(() => setShown(PAGE_SIZE), [query, source, sort, games])
   return <section className="shell page-view">
-    <div className="page-hero"><p className="eyebrow">WEB / APP / GAME / EXPERIMENT</p><h1>Sites</h1><p>실제로 만든 사이트와 프로젝트를 결과 화면 중심으로 봅니다. Live가 있으면 사이트 스크린샷을 우선 표시합니다.</p></div>
-    <div className="toolbar sticky-toolbar"><div className="search-wrap"><span>⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} type="search" placeholder="사이트, 기술, 아이디어 검색…" /></div><div className="chip-row">{['all', 'vercel', 'cloudflare', 'chatgpt', 'github'].map((key) => <button key={key} className={`chip ${source === key ? 'active' : ''}`} onClick={() => setSource(key)}>{key === 'all' ? 'All' : SOURCE_LABEL[key]}</button>)}</div></div>
+    <div className="page-hero">
+      <p className="eyebrow">{games ? 'GAME / RUNNER / PUZZLE / RPG / ARCADE' : 'WEB / APP / TOOL / EXPERIMENT'}</p>
+      <h1>{games ? 'Games' : 'Sites'}</h1>
+      <p>{games ? '직접 만든 게임과 플레이 가능한 프로토타입을 별도로 모았습니다.' : '실제로 만든 웹사이트와 앱·도구를 결과 화면 중심으로 봅니다. 게임 프로젝트는 Games에서 분리해 관리합니다.'}</p>
+    </div>
+    <div className="toolbar sticky-toolbar">
+      <div className="search-wrap"><span>⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} type="search" placeholder={games ? '게임, 엔진, 장르 검색…' : '사이트, 기술, 아이디어 검색…'} /></div>
+      <div className="chip-row">{['all', 'vercel', 'cloudflare', 'chatgpt', 'github'].map((key) => <button key={key} className={`chip ${source === key ? 'active' : ''}`} onClick={() => setSource(key)}>{key === 'all' ? 'All' : SOURCE_LABEL[key]}</button>)}</div>
+    </div>
     <div className="result-line"><span>{projects.length}개</span><select value={sort} onChange={(e) => setSort(e.target.value)}><option value="recent">최근 업데이트</option><option value="name">이름순</option><option value="oldest">오래된 순</option></select></div>
     <div className="site-grid">{projects.slice(0, shown).map((item) => <SiteCard key={item.id} item={item} onOpen={onOpen} />)}</div>
-    {shown < projects.length && <button className="load-more" onClick={() => setShown((value) => value + SITE_PAGE_SIZE)}>더 보기</button>}
+    {shown < projects.length && <button className="load-more" onClick={() => setShown((value) => value + PAGE_SIZE)}>더 보기</button>}
   </section>
 }
 
@@ -259,7 +289,7 @@ function Prompts({ items, onOpen }) {
   return <section className="shell page-view">
     <div className="page-hero prompt-page-hero"><p className="eyebrow">IMAGE / VIDEO / WEB / 3D / GAME</p><h1>Prompt Gallery</h1><p>프롬프트 텍스트보다 <strong>무엇이 나왔는지</strong> 먼저 봅니다. 이미지를 눌러 전체 프롬프트를 열고 바로 복사할 수 있습니다.</p></div>
     <div className="toolbar sticky-toolbar"><div className="search-wrap"><span>⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} type="search" placeholder="image, video, 3D, game, website…" /></div><div className="chip-row">{['all', 'image', 'video', 'web', '3d', 'game', 'research'].map((key) => <button key={key} className={`chip ${category === key ? 'active' : ''}`} onClick={() => setCategory(key)}>{key === 'all' ? 'All' : CATEGORY_LABEL[key]}</button>)}</div></div>
-    <div className="result-line"><span>{prompts.length}개 프롬프트</span><span className="hint">이미지는 <code>public/assets/prompts</code>에 저장 후 preview 연결</span></div>
+    <div className="result-line"><span>{prompts.length}개 프롬프트</span><span className="hint">ChatGPT Library 생성 결과 + 실제 사용 프롬프트</span></div>
     <div className="prompt-masonry">{prompts.map((item) => <PromptCard key={item.id} item={item} onOpen={onOpen} />)}</div>
   </section>
 }
@@ -284,12 +314,16 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
-    const onHash = () => {
+    const syncView = () => {
       const next = location.hash.slice(1)
-      if (VIEWS.includes(next)) setView(next)
+      setView(VIEWS.includes(next) ? next : 'home')
     }
-    window.addEventListener('hashchange', onHash)
-    return () => window.removeEventListener('hashchange', onHash)
+    window.addEventListener('hashchange', syncView)
+    window.addEventListener('popstate', syncView)
+    return () => {
+      window.removeEventListener('hashchange', syncView)
+      window.removeEventListener('popstate', syncView)
+    }
   }, [])
 
   useEffect(() => {
@@ -304,8 +338,8 @@ export default function App() {
   }, [])
 
   const navigate = (next) => {
+    location.hash = next
     setView(next)
-    history.pushState(null, '', `#${next}`)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -314,7 +348,8 @@ export default function App() {
     <main>
       {error && <div className="error-banner">{error}</div>}
       {view === 'home' && <Home items={items} githubCount={githubCount} onNavigate={navigate} onOpen={setSelected} />}
-      {view === 'sites' && <Sites items={items} onOpen={setSelected} />}
+      {view === 'sites' && <ProjectCollection items={items} onOpen={setSelected} />}
+      {view === 'games' && <ProjectCollection items={items} onOpen={setSelected} games />}
       {view === 'prompts' && <Prompts items={items} onOpen={setSelected} />}
       {view === 'ideas' && <Ideas items={items} onOpen={setSelected} />}
     </main>
