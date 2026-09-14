@@ -7,39 +7,34 @@ const nativeFetch = window.fetch.bind(window)
 
 window.fetch = async (input, init) => {
   const url = typeof input === 'string' ? input : input?.url || ''
-
-  if (!url.endsWith('/data/archive.json')) {
-    return nativeFetch(input, init)
-  }
+  if (!url.endsWith('/data/archive.json')) return nativeFetch(input, init)
 
   const archiveResponse = await nativeFetch(input, init)
   if (!archiveResponse.ok) return archiveResponse
 
   try {
     const archive = await archiveResponse.clone().json()
-    const sitesResponse = await nativeFetch('/data/chatgpt-sites.json')
-    if (!sitesResponse.ok) return archiveResponse
+    const [sitesResponse, galleryResponse] = await Promise.all([
+      nativeFetch('/data/chatgpt-sites.json'),
+      nativeFetch('/data/gallery.json'),
+    ])
+    const sites = sitesResponse.ok ? await sitesResponse.json() : { items: [] }
+    const gallery = galleryResponse.ok ? await galleryResponse.json() : { items: [] }
 
-    const sites = await sitesResponse.json()
     const baseItems = (archive.items || []).filter((item) => {
-      const isChatgptSiteProject =
-        item.type === 'project' &&
-        (item.sources || []).includes('chatgpt')
-
-      return !isChatgptSiteProject
+      const isLegacyPrompt = item.type === 'prompt'
+      const isChatgptSiteProject = item.type === 'project' && (item.sources || []).includes('chatgpt')
+      return !isLegacyPrompt && !isChatgptSiteProject
     })
 
-    return new Response(
-      JSON.stringify({
-        ...archive,
-        updated: sites.updated || archive.updated,
-        items: [...baseItems, ...(sites.items || [])],
-      }),
-      {
-        status: archiveResponse.status,
-        headers: { 'Content-Type': 'application/json' },
-      },
-    )
+    return new Response(JSON.stringify({
+      ...archive,
+      updated: gallery.updated || sites.updated || archive.updated,
+      items: [...baseItems, ...(sites.items || []), ...(gallery.items || [])],
+    }), {
+      status: archiveResponse.status,
+      headers: { 'Content-Type': 'application/json' },
+    })
   } catch {
     return archiveResponse
   }
