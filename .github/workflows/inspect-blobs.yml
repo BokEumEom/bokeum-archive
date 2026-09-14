@@ -1,0 +1,18 @@
+name: Inspect Pending Blobs
+on:
+  push:
+    branches: [tmp/blob-inspect]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect chunks
+        run: |
+          for f in .blob-inspect/*; do printf '%s ' "$f"; wc -c < "$f" | tr '\n' ' '; xxd -l 8 -p "$f"; done
+          cat .blob-inspect/{00..06}.webp > /tmp/group-a.bin
+          cat .blob-inspect/{07..20}.webp > /tmp/group-b.bin
+          echo 'GROUP A'; file /tmp/group-a.bin; wc -c /tmp/group-a.bin; xxd -l 16 -p /tmp/group-a.bin
+          echo 'GROUP B'; file /tmp/group-b.bin; wc -c /tmp/group-b.bin; xxd -l 16 -p /tmp/group-b.bin
