@@ -1,0 +1,24 @@
+{
+  "updated": "2026-09-14",
+  "items": [
+    {
+      "id": "override-ink-saint",
+      "type": "project",
+      "projectKind": "game",
+      "title": "ink-saint",
+      "summary": "Ink Saint — GitHub에서 관리하는 게임 프로젝트.",
+      "date": "2026-09-01",
+      "updated": "2026-09-14",
+      "status": "repository",
+      "featured": false,
+      "sources": ["github"],
+      "tags": ["game", "ink-saint"],
+      "githubRepo": "BokEumEom/ink-saint",
+      "liveUrl": "",
+      "preview": "",
+      "idea": "",
+      "prompt": "",
+      "notes": "Explicit game override. 자동 태그 추론과 무관하게 Games에 표시."
+    }
+  ]
+}
