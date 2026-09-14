@@ -21,12 +21,27 @@ async function github(path, token, options = {}) {
   return data
 }
 
-function validSiteUrl(value) {
+function validHttpsUrl(value) {
   try {
     const url = new URL(value)
-    return url.protocol === 'https:' && url.hostname.endsWith('.chatgpt.site')
+    return url.protocol === 'https:'
   } catch {
     return false
+  }
+}
+
+function collectionConfig(collection) {
+  if (collection === 'projects') {
+    return {
+      path: 'public/data/project-overrides.json',
+      label: 'Project',
+      requireChatgptSite: false,
+    }
+  }
+  return {
+    path: 'public/data/chatgpt-sites.json',
+    label: 'ChatGPT Site',
+    requireChatgptSite: true,
   }
 }
 
@@ -39,13 +54,18 @@ export default async function handler(req, res) {
   if (req.headers['x-admin-password'] !== adminPassword) return send(res, 401, { error: '관리자 비밀번호가 올바르지 않습니다.' })
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})
-  const { id, liveUrl } = body
-  if (!id || !validSiteUrl(liveUrl)) return send(res, 400, { error: '정확한 https://*.chatgpt.site URL을 입력하세요.' })
+  const { id, liveUrl, collection = 'chatgpt' } = body
+  const config = collectionConfig(collection)
+
+  if (!id || !validHttpsUrl(liveUrl)) return send(res, 400, { error: '정확한 https:// URL을 입력하세요.' })
+  if (config.requireChatgptSite && !new URL(liveUrl).hostname.endsWith('.chatgpt.site')) {
+    return send(res, 400, { error: 'ChatGPT Site는 https://*.chatgpt.site 주소를 입력하세요.' })
+  }
 
   const repo = process.env.GITHUB_REPO || DEFAULT_REPO
   const branch = process.env.GITHUB_BRANCH || 'main'
   const [owner, name] = repo.split('/')
-  const encodedPath = encodeURIComponent('public/data/chatgpt-sites.json')
+  const encodedPath = encodeURIComponent(config.path)
 
   try {
     const current = await github(`/repos/${owner}/${name}/contents/${encodedPath}?ref=${encodeURIComponent(branch)}`, token)
@@ -53,15 +73,18 @@ export default async function handler(req, res) {
     const index = (json.items || []).findIndex((item) => item.id === id)
     if (index < 0) return send(res, 404, { error: '사이트 항목을 찾지 못했습니다.' })
 
+    const item = json.items[index]
+    const isChatgpt = collection !== 'projects'
     json.items[index] = {
-      ...json.items[index],
+      ...item,
       liveUrl,
-      status: 'public',
-      visibility: 'public',
-      visibilityTarget: undefined,
+      status: 'live',
+      visibility: isChatgpt ? 'public' : item.visibility,
+      visibilityTarget: isChatgpt ? undefined : item.visibilityTarget,
       updated: new Date().toISOString().slice(0, 10),
-      tags: [...new Set([...(json.items[index].tags || []).filter((tag) => tag !== 'needs-public-share'), 'public'])],
-      notes: 'ChatGPT Site · Everyone · URL confirmed manually',
+      sources: isChatgpt ? [...new Set([...(item.sources || []), 'chatgpt'])] : [...new Set([...(item.sources || []), new URL(liveUrl).hostname.includes('vercel.app') ? 'vercel' : 'manual'])],
+      tags: isChatgpt ? [...new Set([...(item.tags || []).filter((tag) => tag !== 'needs-public-share'), 'public'])] : item.tags,
+      notes: isChatgpt ? 'ChatGPT Site · Everyone · URL confirmed manually' : `${config.label} URL confirmed manually`,
     }
     json.updated = new Date().toISOString().slice(0, 10)
 
@@ -70,7 +93,7 @@ export default async function handler(req, res) {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message: `chore: register ChatGPT Site URL for ${json.items[index].title}`,
+        message: `chore: register ${config.label} URL for ${json.items[index].title}`,
         content,
         sha: current.sha,
         branch,
