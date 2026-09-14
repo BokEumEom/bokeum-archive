@@ -30,12 +30,12 @@ jobs:
         run: |
           count=$(find .gallery-atlas-pack -maxdepth 1 -name 'chunk-*.txt' 2>/dev/null | wc -l | tr -d ' ')
           echo "count=$count" >> "$GITHUB_OUTPUT"
-          if [ "$count" -lt 14 ]; then
-            echo "Waiting for all 14 chunks; found $count"
+          if [ "$count" -lt 22 ]; then
+            echo "Waiting for all 22 chunks; found $count"
           fi
 
       - name: Rebuild gallery atlas
-        if: steps.check.outputs.count == '14'
+        if: steps.check.outputs.count == '22'
         shell: bash
         run: |
           cat .gallery-atlas-pack/chunk-*.txt > /tmp/gallery-atlas.b64
@@ -45,7 +45,7 @@ jobs:
           rm -rf .gallery-atlas-pack
 
       - name: Commit assembled asset
-        if: steps.check.outputs.count == '14'
+        if: steps.check.outputs.count == '22'
         shell: bash
         run: |
           git config user.name github-actions[bot]
