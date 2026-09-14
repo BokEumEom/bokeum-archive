@@ -6,19 +6,19 @@
       "type": "project",
       "projectKind": "game",
       "title": "ink-saint",
-      "summary": "Ink Saint — GitHub에서 관리하는 게임 프로젝트.",
+      "summary": "Ink Saint — GitHub와 Vercel에서 관리하는 게임 프로젝트.",
       "date": "2026-09-01",
       "updated": "2026-09-14",
-      "status": "repository",
+      "status": "live",
       "featured": false,
-      "sources": ["github"],
-      "tags": ["game", "ink-saint"],
+      "sources": ["github", "vercel"],
+      "tags": ["game", "ink-saint", "vercel"],
       "githubRepo": "BokEumEom/ink-saint",
-      "liveUrl": "",
+      "liveUrl": "https://ink-saint.vercel.app/",
       "preview": "",
       "idea": "",
       "prompt": "",
-      "notes": "Explicit game override. 자동 태그 추론과 무관하게 Games에 표시."
+      "notes": "Explicit game override. 자동 태그 추론과 무관하게 Games에 표시하며 Vercel 배포 URL을 사용."
     }
   ]
 }
