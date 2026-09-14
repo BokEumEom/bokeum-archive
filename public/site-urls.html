@@ -3,52 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ChatGPT Site URL Manager · BokEum Archive</title>
-  <style>
-    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:dark;background:#0b0d10;color:#f4f4f2}*{box-sizing:border-box}body{margin:0;background:#0b0d10;color:#f4f4f2}.wrap{width:min(1080px,calc(100% - 32px));margin:0 auto;padding:56px 0 96px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:34px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:#9299a3;text-transform:uppercase;margin:0 0 12px}h1{font-size:clamp(42px,7vw,78px);letter-spacing:-.055em;line-height:.95;margin:0}p{color:#9ba1aa;line-height:1.6}.back{border:1px solid #2a3038;border-radius:999px;padding:10px 14px;color:#f4f4f2;text-decoration:none}.auth{background:#11151a;border:1px solid #262d35;border-radius:18px;padding:18px;margin-bottom:20px;display:grid;grid-template-columns:1fr auto;gap:12px}.auth input,.row input{width:100%;background:#0b0d10;color:#f4f4f2;border:1px solid #2b323b;border-radius:12px;padding:12px 13px;font:inherit}.list{display:grid;gap:10px}.row{display:grid;grid-template-columns:minmax(220px,1fr) minmax(320px,2fr) auto;gap:12px;align-items:center;background:#11151a;border:1px solid #262d35;border-radius:16px;padding:14px}.name strong{display:block}.name small{display:block;color:#7f8791;margin-top:4px}.row button,.auth button{border:0;background:#d9ff55;color:#11150c;border-radius:999px;padding:11px 16px;font-weight:800;cursor:pointer}.row button:disabled{opacity:.5}.state{display:inline-block;margin-top:6px;font-size:10px;padding:5px 8px;border-radius:999px;background:#1b2026;color:#aeb5bd}.state.missing{background:#3a2525;color:#ffb6b6}.msg{margin-top:18px;min-height:24px;color:#d9ff55}.note{margin:20px 0 28px;padding:14px 16px;border:1px solid #2d343d;border-radius:14px;background:#11151a}@media(max-width:760px){.top{display:block}.back{display:inline-block;margin-top:18px}.auth{grid-template-columns:1fr}.row{grid-template-columns:1fr}.row input{min-width:0}}
-  </style>
+  <meta http-equiv="refresh" content="0; url=/admin#sites" />
+  <title>Moved · BokEum Archive</title>
+  <script>location.replace('/admin#sites')</script>
 </head>
 <body>
-  <main class="wrap">
-    <div class="top"><div><p class="eyebrow">CHATGPT SITES</p><h1>Site URL Manager</h1><p>ChatGPT Sites의 실제 공개 URL만 등록합니다. slug를 추정하지 않습니다.</p></div><a class="back" href="/#sites">← Archive</a></div>
-    <div class="note">ChatGPT Sites에서 <strong>공유 → Everyone</strong>으로 공개한 뒤 주소창의 <code>https://…chatgpt.site</code> 주소를 그대로 붙여넣으세요.</div>
-    <div class="auth"><input id="password" type="password" placeholder="Admin password (Vercel ADMIN_PASSWORD)" /><button id="remember">Remember</button></div>
-    <section id="list" class="list"></section>
-    <p id="msg" class="msg"></p>
-  </main>
-<script>
-const passwordEl=document.querySelector('#password');
-const listEl=document.querySelector('#list');
-const msgEl=document.querySelector('#msg');
-passwordEl.value=sessionStorage.getItem('archive-admin-password')||'';
-document.querySelector('#remember').onclick=()=>{sessionStorage.setItem('archive-admin-password',passwordEl.value);msgEl.textContent='비밀번호를 이 탭에 저장했습니다.'};
-
-async function load(){
-  const res=await fetch('/data/chatgpt-sites.json',{cache:'no-store'});
-  const data=await res.json();
-  listEl.innerHTML='';
-  for(const item of data.items||[]){
-    const row=document.createElement('div');row.className='row';
-    const name=document.createElement('div');name.className='name';
-    const strong=document.createElement('strong');strong.textContent=item.title;
-    const small=document.createElement('small');small.textContent=(item.sources||[]).includes('chatgpt')?'ChatGPT Site':'';
-    const state=document.createElement('span');state.className='state '+(item.liveUrl?'':'missing');state.textContent=item.liveUrl?'URL registered':'URL missing';
-    name.append(strong,small,state);
-    const input=document.createElement('input');input.type='url';input.value=item.liveUrl||'';input.placeholder='https://your-site.bokeum.chatgpt.site';
-    const button=document.createElement('button');button.textContent='Save';
-    button.onclick=async()=>{
-      if(!passwordEl.value){msgEl.textContent='관리자 비밀번호를 입력하세요.';return}
-      button.disabled=true;msgEl.textContent='저장 중…';
-      try{
-        const r=await fetch('/api/sites',{method:'POST',headers:{'Content-Type':'application/json','x-admin-password':passwordEl.value},body:JSON.stringify({id:item.id,liveUrl:input.value.trim()})});
-        const result=await r.json();if(!r.ok)throw new Error(result.error||'저장 실패');
-        sessionStorage.setItem('archive-admin-password',passwordEl.value);state.className='state';state.textContent='URL registered';msgEl.textContent=`${item.title} URL을 GitHub에 등록했습니다.`;
-      }catch(error){msgEl.textContent=error.message}finally{button.disabled=false}
-    };
-    row.append(name,input,button);listEl.append(row)
-  }
-}
-load().catch(error=>{msgEl.textContent=error.message});
-</script>
+  <p>Site URL Manager는 <a href="/admin#sites">Archive Admin</a>으로 통합되었습니다.</p>
 </body>
 </html>
