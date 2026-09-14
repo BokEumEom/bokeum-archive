@@ -14,23 +14,27 @@ window.fetch = async (input, init) => {
 
   try {
     const archive = await archiveResponse.clone().json()
-    const [sitesResponse, galleryResponse] = await Promise.all([
-      nativeFetch('/data/chatgpt-sites.json'),
-      nativeFetch('/data/gallery.json'),
+    const [sitesResponse, galleryResponse, overridesResponse] = await Promise.all([
+      nativeFetch('/data/chatgpt-sites.json', { cache: 'no-store' }),
+      nativeFetch('/data/gallery.json', { cache: 'no-store' }),
+      nativeFetch('/data/project-overrides.json', { cache: 'no-store' }),
     ])
     const sites = sitesResponse.ok ? await sitesResponse.json() : { items: [] }
     const gallery = galleryResponse.ok ? await galleryResponse.json() : { items: [] }
+    const overrides = overridesResponse.ok ? await overridesResponse.json() : { items: [] }
+    const overrideRepos = new Set((overrides.items || []).map((item) => item.githubRepo?.toLowerCase()).filter(Boolean))
 
     const baseItems = (archive.items || []).filter((item) => {
       const isLegacyPrompt = item.type === 'prompt'
       const isChatgptSiteProject = item.type === 'project' && (item.sources || []).includes('chatgpt')
-      return !isLegacyPrompt && !isChatgptSiteProject
+      const isOverriddenProject = item.githubRepo && overrideRepos.has(item.githubRepo.toLowerCase())
+      return !isLegacyPrompt && !isChatgptSiteProject && !isOverriddenProject
     })
 
     return new Response(JSON.stringify({
       ...archive,
-      updated: gallery.updated || sites.updated || archive.updated,
-      items: [...baseItems, ...(sites.items || []), ...(gallery.items || [])],
+      updated: overrides.updated || gallery.updated || sites.updated || archive.updated,
+      items: [...baseItems, ...(overrides.items || []), ...(sites.items || []), ...(gallery.items || [])],
     }), {
       status: archiveResponse.status,
       headers: { 'Content-Type': 'application/json' },
